@@ -1,5 +1,2 @@
-require "inject/version"
-
-module Inject
-  # Your code goes here...
-end
+require 'inject/version'
+require 'injector'
