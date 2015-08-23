@@ -4,21 +4,22 @@ require 'inject/rule'
 class Injector
   class RuleNotFound < StandardError; end
 
-  def initialize(*params)
+  def initialize(**params)
     @rules = {}
     @injected = {injector: self}
     @callbacks = {}
-    insert_rules(params)
+    params.each do |k, v|
+      set(k, v)
+    end
   end
 
   def get(key, overrides = {})
-    # lazy evaluate rule, then store it
+    # (lazily) evaluate rule, then store it
     @injected[key] ||= begin
       arr = @rules[key]
       if arr.nil?
-        raise(RuleNotFound,
-          "No rule for #{key.inspect}. Available rules: #{@rules.keys.map(&:inspect).join(', ')}"
-        )
+        raise RuleNotFound,
+          "No rule for #{key.inspect}. Available fields: #{@rules.keys.map(&:inspect).join(', ')}"
       end
       result = nil
       arr.to_a.reverse.each do |rule|
@@ -51,10 +52,13 @@ class Injector
         ].join(" ")
       ) if type == :rest or type == :keyrest
 
-      # fetch by index first!
+      # fetch by index first! e.g. inject(0 => 40) { |x| x + 2 }
       result = overrides.fetch(index) do
         # then fetch by value
         overrides.fetch(value) do
+          # Unfortunately, optional arguments are not possible, as
+          # a Ruby block passed to `inject` will have exclusively optional arguments.
+          # Instead, key arguments introduced in Ruby 2.0 should be used.
           if type == :key
             begin self.get(value)
             rescue RuleNotFound
