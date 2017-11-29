@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["cydrop@gmail.com"]
   spec.summary       = %q{Inject objects into variables by name or symbol}
   spec.description   = %q{Inspired by angular's inject, with addition of rules and flexibility.}
-  spec.homepage      = ""
+  spec.homepage      = "https://github.com/muja/inject.rb"
   spec.licenses      = ["MIT"]
 
   spec.files         = `git ls-files`.split($/)
