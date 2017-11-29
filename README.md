@@ -72,7 +72,7 @@ and if not, check for the environment variable SOME_WEB_SERVICE_TOKEN (or e.g. t
 and if that's empty, invoke a login to said web service using the user credentials for which we
 have established multiple rules as well. Let's see it in action:
 
-```
+```ruby
 # injector that already has rules/values for "token_file" and "cli_params" 
 
 injector.insert(:token, :file, -> (token_file) do
