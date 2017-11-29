@@ -64,6 +64,57 @@ rule `ifconfig` will be used and if that returns nil, a call to `ipecho.net` wil
 
 Once a value is injected, it will be used for any consecutive calls (it will not be injected again).
 
+You can also define dependencies for rules. For a real world example,
+let's say you need an authentication token to make API calls to a web service,
+and you want to store this token locally for future invocations of your program.
+What you'd do naturally is look in the local file whether the token is already there,
+and if not, check for the environment variable SOME_WEB_SERVICE_TOKEN (or e.g. the CLI parameter),
+and if that's empty, invoke a login to said web service using the user credentials for which we
+have established multiple rules as well. Let's see it in action:
+
+```
+# injector that already has rules/values for "token_file" and "cli_params" 
+
+injector.insert(:token, :file, -> (token_file) do
+  extract_token_from(token_file.read)
+end, before: :all)
+
+injector.insert(:token, :cli, -> (cli_params) do
+  cli_params[:web_service_token]
+end, after: :file)
+
+injector.insert(:token, :env, -> do
+  ENV["SOME_WEB_SERVICE_TOKEN"]
+end, after: :cli)
+
+injector.insert(:token, :login, -> (username, password) do
+  SomeWebService.login(username, password).token
+end, after: :all)
+
+injector.insert(:username, :cli_params -> (cli_params) do
+  cli_params[:username]
+end, before: :all)
+
+injector.insert(:username, :prompt, -> do
+  $stdout.print "(someweb.service) Username: "
+  $stdin.gets.chomp
+end, after: :all)
+
+injector.insert(:password, :cli_params -> (cli_params) do
+  cli_params[:password]
+end, before: :all)
+
+injector.insert(:password, :prompt, -> do
+  require 'io/console'
+  begin
+    $stdout.print "(someweb.service) Password: "
+    $stdin.noecho(&:gets).chomp
+  ensure puts
+  end
+end, after: :all)
+```
+
+
 ## Contributing
 
 1. Fork it
